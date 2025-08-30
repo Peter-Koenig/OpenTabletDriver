@@ -99,27 +99,16 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
         {
             try
             {
-                if (data.Length < 6)
-                    return new DeviceReport(data);
-
-                // Safe bounds check before accessing data[5] for dial value
-                if (data.Length > 5)
+                if (data.Length < 6) return new DeviceReport(data);
+                sbyte dialValue = (sbyte)data[24]; // temporäre Annahme, bis HID-Analyse vorliegt
+                return new RelativeTabletReport
                 {
-                    sbyte dialValue = (sbyte)data[5]; // Dial value at offset 5 (temporary assumption)
-
-                    // TODO: Verify actual dial byte offset from HID analysis
-                    // TODO: Implement DialInvertDirection attribute support
-                    // TODO: Generate proper scroll events once HID analysis is complete
-
-                    // For now, return basic device report - scroll handling will be implemented
-                    // after HID analysis confirms the exact dial byte offset and behavior
-                }
-
-                return new DeviceReport(data);
+                    Raw = data,
+                    Relative = new Vector2(0, dialValue)
+                };
             }
             catch
             {
-                // Fallback to neutral report on any parsing error
                 return new DeviceReport(data);
             }
         }
