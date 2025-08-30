@@ -11,9 +11,9 @@ Successfully implemented string-independent support for Huion Inspiroy Keydial K
 **Key Features**:
 - VID/PID matching: 9580/100 (0x256C/0x0064) - String-independent detection
 - Interface separation:
-  - Interface 1: Digitizer/Pen (Report Length: 93) - Neutral handling
-  - Interface 2: Dial/Keyboard (Report Length: 148) - Dial events processed
-  - Interface 0: Ignored via `libinputoverride="1"` - Prevents double cursor
+  - Interface 1.1: Digitizer/Pen (Report Length: 10) - Coordinate parsing
+  - Interface 1.2: Dial/Keyboard (Report Length: 10) - Pending HID analysis
+  - Interface 1.0: Ignored via `libinputoverride="1"` - Prevents double cursor
 - Temporary specifications (BLOCKED BY HID DATA):
   - Physical size: 226×143 mm (preliminary)
   - Max coordinates: 32767×32767 (placeholder)
@@ -24,10 +24,10 @@ Successfully implemented string-independent support for Huion Inspiroy Keydial K
 **Path**: `OpenTabletDriver/OpenTabletDriver.Configurations/Parsers/Huion/KD200ReportParser.cs`
 
 **Functionality**:
-- Handles multiple report types from different interfaces
-- Pen reports: Neutral positioning (0,0) with zero pressure - BLOCKED BY HID OFFSETS
-- Auxiliary reports: UCLogicAuxReport fallback for button events
-- Dial reports: REL_WHEEL scroll events conversion (0xf1 reports)
+- Handles 10-byte reports from both interfaces
+- Pen reports: Coordinate parsing from bytes 1-4 (Report ID 0x0A)
+- Basic coordinate mapping implemented - needs HID descriptor verification
+- Pressure and button mapping pending HID analysis
 - Robust bounds checking and fallback handling
 - String-independent operation (no manufacturer/product name dependency)
 

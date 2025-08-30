@@ -7,9 +7,6 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
 {
     public class KD200ReportParser : IReportParser<IDeviceReport>
     {
-        // TODO: Add configurable dial inversion attribute
-        // private bool _invertDialDirection = false;
-
         public IDeviceReport Parse(byte[] data)
         {
             if (data == null || data.Length == 0)
@@ -19,77 +16,19 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             if (data.Length < 1)
                 return new DeviceReport(data);
 
-            // Switch on report ID from data[0]
             byte reportId = data[0];
-            switch (reportId)
+
+            // Handle 10-byte reports from both interfaces
+            if (data.Length == 10)
             {
-                case 0xe0:
-                case 0xe3:
-                    // Auxiliary buttons report - use standard parser
-                    return new UCLogicAuxReport(data);
-                case 0xf1:
-                    // Wheel/dial data - handle with bounds checking
-                    return ParseDialReport(data);
-                case 0x00:
-                    return new OutOfRangeReport(data);
-            }
-
-            // For pen reports, use neutral handling until HID data is available
-            // BLOCKED BY HID DUMPS - Need actual report structure analysis
-            if (data.Length == 93) // Interface 1 reports
-            {
-                return HandlePenReportNeutral(data);
-            }
-
-            if (data.Length == 148) // Interface 2 reports
-            {
-                return HandleAuxiliaryReportNeutral(data);
-            }
-
-            // Default to generic device report for unknown formats
-            return new DeviceReport(data);
-        }
-
-        private IDeviceReport HandlePenReportNeutral(byte[] data)
-        {
-            // BLOCKED BY HID DUMPS - Neutral handling until HID analysis
-            // TODO: Replace with actual byte offsets from usbhid-dump analysis
-            // X/Y/Pressure/Button offsets need to be determined from HID descriptor
-
-            // For now, return basic tablet report without assumptions
-            return new TabletReport
-            {
-                Raw = data,
-                Position = new Vector2(0, 0), // TODO: Replace with actual X/Y offsets from HID analysis
-                Pressure = 0,                 // TODO: Replace with actual pressure offset from HID analysis
-                PenButtons = new bool[2]      // TODO: Replace with actual button bit positions from HID dump
+                switch (reportId)
                 {
-                    false, // Tip button - TODO: determine actual bit position from HID dump
-                    false  // Side button - TODO: determine actual bit position from HID dump
-                }
-            };
-        }
+                    case 0x0A: // Main pen/digitizer report
+                        return ParsePenReport(data);
 
-        private IDeviceReport HandleAuxiliaryReportNeutral(byte[] data)
-        {
-            // Neutral handling for auxiliary reports (Interface 2)
-            // This includes both dial and keyboard events
-
-            // Safe bounds check before accessing data[0]
-            if (data.Length > 0)
-            {
-                byte reportId = data[0];
-
-                // Handle dial reports specifically - treat as auxiliary events
-                if (reportId == 0xf1 && data.Length > 5)
-                {
-                    return ParseDialReport(data);
-                }
-
-                // Handle other auxiliary report types (buttons, etc.)
-                if (reportId == 0xe0 || reportId == 0xe3)
-                {
-                    return new UCLogicAuxReport(data);
+                    // Add other report IDs as needed based on HID analysis
+                    default:
+                        return new DeviceReport(data);
                 }
             }
 
@@ -97,28 +36,38 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             return new DeviceReport(data);
         }
 
-        private IDeviceReport ParseDialReport(byte[] data)
+        private IDeviceReport ParsePenReport(byte[] data)
         {
             try
             {
-                if (data.Length < 6)
+                if (data.Length < 10)
                     return new DeviceReport(data);
 
-                // Safe bounds check before accessing data[5] for dial value
-                if (data.Length > 5)
+                // Parse coordinates from the HID dump data pattern
+                // Sample data: 0A C0 23 42 18 56 00 00 00 00
+                // Need to analyze actual coordinate mapping from HID descriptor
+
+                // Temporary placeholder parsing - needs HID descriptor analysis
+                ushort x = (ushort)((data[2] << 8) | data[1]);  // Example: 0x23C0
+                ushort y = (ushort)((data[4] << 8) | data[3]);  // Example: 0x4218
+
+                // Pressure and buttons need HID analysis
+                ushort pressure = 0;
+                bool[] penButtons = new bool[2] { false, false };
+
+                // Check if pen is in range (non-zero coordinates)
+                bool inRange = x > 0 || y > 0;
+
+                if (!inRange)
+                    return new OutOfRangeReport(data);
+
+                return new TabletReport
                 {
-                    sbyte dialValue = (sbyte)data[5]; // Dial value at offset 5 (temporary assumption)
-
-                    // TODO: Verify actual dial byte offset from HID analysis
-                    // TODO: Implement DialInvertDirection attribute support
-                    // TODO: Generate proper scroll events once HID analysis is complete
-
-                    // Dial events are handled as auxiliary events - the actual relative movement
-                    // will be processed by the output mode (IRelativeMode), not by a special report type
-                    // For now, return basic device report - the dial data is preserved in Raw
-                }
-
-                return new DeviceReport(data);
+                    Raw = data,
+                    Position = new Vector2(x, y),
+                    Pressure = pressure,
+                    PenButtons = penButtons
+                };
             }
             catch
             {

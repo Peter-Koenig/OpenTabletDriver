@@ -29,17 +29,17 @@ lsusb | grep -i "256c:0064"
 ### 1. Complete HID Descriptor Capture (MOST IMPORTANT)
 ```bash
 # Capture Interface 1 (Pen/Digitizer) - Report Length: 93
-sudo usbhid-dump -d 256c:0064 -i 1 -e all > kd200_if1_complete.txt
+sudo usbhid-dump -d 256c:0064 -i 1.1 -e all > kd200_if1.1_hid_raw.txt
 
-# Capture Interface 2 (Dial/Keyboard) - Report Length: 148
-sudo usbhid-dump -d 256c:0064 -i 2 -e all > kd200_if2_complete.txt
+# Interface 1.2 (Dial/Keyboard) - Report Length: 10  
+sudo usbhid-dump -d 256c:0064 -i 1.2 -e all > kd200_if1.2_hid_raw.txt
 
 # Capture all interfaces for reference
 sudo usbhid-dump -d 256c:0064 -a > kd200_all_interfaces.txt
 
 # Alternative: Get descriptor and stream separately for each interface
-# sudo usbhid-dump -d 256c:0064 -i 1 -e descriptor > kd200_if1_descriptor.txt
-# sudo usbhid-dump -d 256c:0064 -i 1 -e stream >> kd200_if1_complete.txt
+# sudo usbhid-dump -d 256c:0064 -i 1.1 -e descriptor > kd200_if1.1_descriptor.txt
+# sudo usbhid-dump -d 256c:0064 -i 1.1 -e stream >> kd200_if1.1_complete.txt
 # sudo usbhid-dump -d 256c:0064 -i 2 -e descriptor > kd200_if2_descriptor.txt  
 # sudo usbhid-dump -d 256c:0064 -i 2 -e stream >> kd200_if2_complete.txt
 ```

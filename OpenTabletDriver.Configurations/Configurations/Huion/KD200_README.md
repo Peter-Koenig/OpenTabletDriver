@@ -9,9 +9,9 @@
 - **Detection Method**: VID/PID + Interface + Report Length (String-independent matching)
 
 ## USB Interface Configuration
-- **Interface 0**: HID Mouse (Report Length: 18) - **IGNORED** via libinputoverride="1" (prevents double cursor)
-- **Interface 1**: Digitizer (Report Length: 93) - **Pen Input** (Absolute positioning, pressure, buttons)
-- **Interface 2**: Auxiliary (Report Length: 148) - **Dial & Keyboard** (Relative scroll, express keys)
+- **Interface 1.0**: HID Mouse (Report Length: 18) - **IGNORED** via libinputoverride="1" (prevents double cursor)
+- **Interface 1.1**: Digitizer (Report Length: 10) - **Pen Input** (Absolute positioning, pressure, buttons)
+- **Interface 1.2**: Auxiliary (Report Length: 10) - **Dial & Keyboard** (Relative scroll, express keys)
 
 ## Linux evdev Devices
 - `HUION Huion Tablet_KD200 Pen` (eventX) - EV=1b, ABS=d000003 (X/Y/Pressure), KEY=c03
@@ -22,19 +22,19 @@
 
 ### ✅ Implemented Features
 - Robust device detection via VID/PID + Interface + Report Length (no string dependency)
-- Interface separation (1=Pen, 2=Dial/Keys, 0=ignored via libinputoverride)
-- Basic pen support with neutral positioning (awaiting HID offsets)
-- Dial scroll wheel emulation (0xf1 reports processed as REL_WHEEL)
+- Interface separation (1.1=Pen, 1.2=Dial/Keys, 1.0=ignored via libinputoverride)
+- Basic pen support with coordinate parsing from 10-byte reports
+- Report ID 0x0A handling for pen input
 - String-independent matching (works despite "Unable to retrieve device's supported langId" errors)
 
 ### ⚠️ Temporary Values - BLOCKED BY HID DATA CAPTURE
 - **MaxX/MaxY**: 32767 (placeholder - TODO: extract from HID descriptor analysis)
 - **Width/Height**: 226×143 mm (preliminary - TODO: verify from actual coordinate ranges)
 - **MaxPressure**: 8192 (placeholder - TODO: determine actual maximum from HID reports)
-- **Coordinate Offsets**: X/Y positions at (0,0) - TODO: find actual byte offsets from HID analysis
-- **Pressure Offset**: Currently 0 - TODO: locate pressure byte position in 93-byte reports
+- **Coordinate Offsets**: X/Y positions parsed from bytes 1-4 - TODO: verify exact mapping from HID analysis
+- **Pressure Offset**: Currently 0 - TODO: locate pressure byte position in 10-byte reports
 - **Button Bits**: Neutral state - TODO: map tip/side button bit positions from HID data
-- **Dial Calibration**: Basic 1:1 mapping - TODO: verify dial byte offset and sensitivity
+- **Report Format**: 10-byte reports with ID 0x0A - needs complete HID descriptor analysis
 
 ## HID Data Capture Procedure (CRITICAL FOR FINAL IMPLEMENTATION)
 
@@ -67,8 +67,8 @@ sudo usbhid-dump -d 256c:0064 -i 1 -e all > kd200_if1_hid_raw.txt
 sudo usbhid-dump -d 256c:0064 -i 2 -e all > kd200_if2_hid_raw.txt
 
 # Alternative: Capture descriptor and stream separately
-# sudo usbhid-dump -d 256c:0064 -i 1 -e descriptor > kd200_if1_descriptor.txt
-# sudo usbhid-dump -d 256c:0064 -i 1 -e stream >> kd200_if1_complete.txt
+# sudo usbhid-dump -d 256c:0064 -i 1.1 -e descriptor > kd200_if1.1_descriptor.txt
+# sudo usbhid-dump -d 256c:0064 -i 1.1 -e stream >> kd200_if1.1_complete.txt
 
 # Note: "descriptor,stream" is invalid syntax; use "-e all" or separate commands
 
@@ -82,20 +82,20 @@ sudo usbhid-dump -d 256c:0064 -i 2 -e all > kd200_if2_hid_raw.txt
 
 ## HID Data Analysis - Critical for Parser Completion
 
-### Interface 1 (Pen) - Critical Offsets Needed:
+### Interface 1.1 (Pen) - Critical Offsets Needed:
 - **Report Descriptor**: HID usage pages and complete report structure
-- **X Position**: Exact byte offset and endianness (2 bytes) - TODO: find from HID dump
-- **Y Position**: Exact byte offset and endianness (2 bytes) - TODO: find from HID dump  
-- **Pressure**: Byte offset and bit depth (2 bytes) - TODO: locate in 93-byte reports
+- **X Position**: Exact byte offset and endianness (2 bytes) - TODO: verify from HID dump (currently bytes 1-2)
+- **Y Position**: Exact byte offset and endianness (2 bytes) - TODO: verify from HID dump (currently bytes 3-4)  
+- **Pressure**: Byte offset and bit depth (2 bytes) - TODO: locate in 10-byte reports
 - **Buttons**: Bit positions for tip/side buttons - TODO: map from button test captures
-- **Report ID**: Identifier byte for pen reports - TODO: identify from stream analysis
+- **Report ID**: Currently 0x0A - TODO: confirm all report types from HID analysis
 - **Max Values**: Actual MaxX, MaxY, MaxPressure from descriptor - TODO: extract from HID data
 
-### Interface 2 (Dial/Keys) - Critical Offsets Needed:
+### Interface 1.2 (Dial/Keys) - Critical Offsets Needed:
 - **Report Descriptor**: Dial and keyboard usage pages - TODO: analyze descriptor
-- **Dial Data**: Byte offset for wheel values (signed byte) - TODO: verify data[5] assumption
+- **Dial Data**: Byte offset for wheel values (signed byte) - TODO: locate in 10-byte reports
 - **Key Matrix**: Button bit positions and mapping - TODO: map express key bits
-- **Report IDs**: Different report types (0xe0, 0xe3, 0xf1, etc.) - TODO: confirm all types
+- **Report IDs**: Currently 0x0A - TODO: identify different report types from HID analysis
 - **Endianness**: Byte order for multi-byte values - TODO: determine from HID analysis
 
 ## Implementation Validation Checklist - Current Status
