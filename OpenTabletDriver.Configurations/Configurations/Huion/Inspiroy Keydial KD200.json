@@ -2,25 +2,18 @@
   "Name": "Huion Inspiroy Keydial KD200",
   "Specifications": {
     "Digitizer": {
-      "Width": 226.0,
-      "Height": 143.0,
       "MaxX": 32767,
       "MaxY": 32767
     },
     "Pen": {
-      "MaxPressure": 8191,
-      "ButtonCount": 2
-    },
-    "AuxiliaryButtons": {
-      "ButtonCount": 0
+      "MaxPressure": 8191
     }
   },
   "DigitizerIdentifiers": [
     {
       "VendorID": 9580,
       "ProductID": 100,
-      "InputReportLength": 10,
-      "ReportParser": "OpenTabletDriver.Configurations.Parsers.Huion.KD200ReportParser",
+      "ReportParser": "OpenTabletDriver.Configurations.Parsers.UCLogic.UCLogicTiltReportParser",
       "Attributes": {
         "Interface": "1"
       }
@@ -30,16 +23,13 @@
     {
       "VendorID": 9580,
       "ProductID": 100,
-      "InputReportLength": 9,
-      "ReportParser": "OpenTabletDriver.Configurations.Parsers.Huion.KD200ReportParser",
+      "ReportParser": "OpenTabletDriver.Configurations.Parsers.UCLogic.UCLogicTiltReportParser",
       "Attributes": {
         "Interface": "2"
       }
     }
   ],
   "Attributes": {
-    "libinputoverride": "1",
-    "FeatureInitDelayMs": "100",
-    "DialInvertDirection": "false"
+    "libinputoverride": "1"
   }
 }
