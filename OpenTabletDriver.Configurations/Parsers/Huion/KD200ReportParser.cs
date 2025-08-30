@@ -15,12 +15,13 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             if (data == null || data.Length == 0)
                 return new DeviceReport(Array.Empty<byte>());
 
-            // Safe bounds check before accessing data
+            // Safe bounds check before accessing data[0]
             if (data.Length < 1)
                 return new DeviceReport(data);
 
-            // Switch on report ID from data instead of data[1]
-            switch (data)
+            // Switch on report ID from data[0]
+            byte reportId = data[0];
+            switch (reportId)
             {
                 case 0xe0:
                 case 0xe3:
@@ -74,17 +75,19 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             // Neutral handling for auxiliary reports (Interface 2)
             // This includes both dial and keyboard events
 
-            // Safe bounds check before accessing data
+            // Safe bounds check before accessing data[0]
             if (data.Length > 0)
             {
-                // Handle dial reports specifically
-                if (data == 0xf1 && data.Length > 5)
+                byte reportId = data[0];
+
+                // Handle dial reports specifically - treat as auxiliary events
+                if (reportId == 0xf1 && data.Length > 5)
                 {
                     return ParseDialReport(data);
                 }
 
                 // Handle other auxiliary report types (buttons, etc.)
-                if (data == 0xe0 || data == 0xe3)
+                if (reportId == 0xe0 || reportId == 0xe3)
                 {
                     return new UCLogicAuxReport(data);
                 }
@@ -93,7 +96,6 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             // Default to generic device report for unknown formats
             return new DeviceReport(data);
         }
-
 
         private IDeviceReport ParseDialReport(byte[] data)
         {
@@ -111,8 +113,9 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
                     // TODO: Implement DialInvertDirection attribute support
                     // TODO: Generate proper scroll events once HID analysis is complete
 
-                    // For now, return basic device report - scroll handling will be implemented
-                    // after HID analysis confirms the exact dial byte offset and behavior
+                    // Dial events are handled as auxiliary events - the actual relative movement
+                    // will be processed by the output mode (IRelativeMode), not by a special report type
+                    // For now, return basic device report - the dial data is preserved in Raw
                 }
 
                 return new DeviceReport(data);
