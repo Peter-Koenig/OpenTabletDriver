@@ -10,42 +10,30 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
         // TODO: Add configurable dial inversion attribute
         // private bool _invertDialDirection = false;
 
+
         public IDeviceReport Parse(byte[] data)
         {
             if (data == null || data.Length == 0)
                 return new DeviceReport(Array.Empty<byte>());
 
-            // Safe bounds check before accessing data[0]
             if (data.Length < 1)
                 return new DeviceReport(data);
 
-            // Switch on report ID from data[0] instead of data[1]
-            switch (data[0])
+            switch (data)
             {
                 case 0xe0:
                 case 0xe3:
-                    // Auxiliary buttons report - use standard parser
-                    return new UCLogicAuxReport(data);
+                    return new UCLogicAuxReport(data); // Aux-Buttons
                 case 0xf1:
-                    // Wheel/dial data - handle with bounds checking
-                    return ParseDialReport(data);
+                    // Vorläufig neutral behandeln (wie Inspiroy), bis Dial-Struktur geklärt ist
+                    return new DeviceReport(data);
                 case 0x00:
                     return new OutOfRangeReport(data);
             }
 
-            // For pen reports, use neutral handling until HID data is available
-            // BLOCKED BY HID DUMPS - Need actual report structure analysis
-            if (data.Length == 93) // Interface 1 reports
-            {
-                return HandlePenReportNeutral(data);
-            }
-
-            if (data.Length == 148) // Interface 2 reports
-            {
-                return HandleAuxiliaryReportNeutral(data);
-            }
-
-            // Default to generic device report for unknown formats
+            // Rest unverändert
+            if (data.Length == 93) return HandlePenReportNeutral(data);
+            if (data.Length == 148) return HandleAuxiliaryReportNeutral(data);
             return new DeviceReport(data);
         }
 
@@ -95,32 +83,23 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
         }
 
 
-        // KD200ReportParser.cs
 
-        public IDeviceReport Parse(byte[] data)
+        private IDeviceReport ParseDialReport(byte[] data)
         {
-            if (data == null || data.Length == 0)
-                return new DeviceReport(Array.Empty<byte>());
-
-            if (data.Length < 1)
-                return new DeviceReport(data);
-
-            switch (data)
+            try
             {
-                case 0xe0:
-                case 0xe3:
-                    return new UCLogicAuxReport(data); // Aux-Buttons
-                case 0xf1:
-                    // Vorläufig neutral behandeln (wie Inspiroy), bis Dial-Struktur geklärt ist
-                    return new DeviceReport(data);
-                case 0x00:
-                    return new OutOfRangeReport(data);
+                if (data.Length < 6) return new DeviceReport(data);
+                sbyte dialValue = (sbyte)data[24]; // temporäre Annahme, bis HID-Analyse vorliegt
+                return new RelativeTabletReport
+                {
+                    Raw = data,
+                    Relative = new Vector2(0, dialValue)
+                };
             }
-
-            // Rest unverändert
-            if (data.Length == 93) return HandlePenReportNeutral(data);
-            if (data.Length == 148) return HandleAuxiliaryReportNeutral(data);
-            return new DeviceReport(data);
+            catch
+            {
+                return new DeviceReport(data);
+            }
         }
     }
 }
