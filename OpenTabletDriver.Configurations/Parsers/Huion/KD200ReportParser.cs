@@ -95,22 +95,32 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
         }
 
 
-        private IDeviceReport ParseDialReport(byte[] data)
+        // KD200ReportParser.cs
+
+        public IDeviceReport Parse(byte[] data)
         {
-            try
-            {
-                if (data.Length < 6) return new DeviceReport(data);
-                sbyte dialValue = (sbyte)data[24]; // temporäre Annahme, bis HID-Analyse vorliegt
-                return new RelativeTabletReport
-                {
-                    Raw = data,
-                    Relative = new Vector2(0, dialValue)
-                };
-            }
-            catch
-            {
+            if (data == null || data.Length == 0)
+                return new DeviceReport(Array.Empty<byte>());
+
+            if (data.Length < 1)
                 return new DeviceReport(data);
+
+            switch (data)
+            {
+                case 0xe0:
+                case 0xe3:
+                    return new UCLogicAuxReport(data); // Aux-Buttons
+                case 0xf1:
+                    // Vorläufig neutral behandeln (wie Inspiroy), bis Dial-Struktur geklärt ist
+                    return new DeviceReport(data);
+                case 0x00:
+                    return new OutOfRangeReport(data);
             }
+
+            // Rest unverändert
+            if (data.Length == 93) return HandlePenReportNeutral(data);
+            if (data.Length == 148) return HandleAuxiliaryReportNeutral(data);
+            return new DeviceReport(data);
         }
     }
 }
