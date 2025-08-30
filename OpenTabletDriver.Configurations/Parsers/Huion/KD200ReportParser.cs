@@ -99,17 +99,11 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
         {
             try
             {
-<<<<<<< HEAD
-                if (data.Length < 6) return new DeviceReport(data);
-                sbyte dialValue = (sbyte)data[3]; // temporäre Annahme, bis HID-Analyse vorliegt
-                return new RelativeTabletReport
-=======
                 if (data.Length < 6)
                     return new DeviceReport(data);
 
                 // Safe bounds check before accessing data[5] for dial value
                 if (data.Length > 5)
->>>>>>> parent of eab0ad08 (Update KD200ReportParser.cs)
                 {
                     sbyte dialValue = (sbyte)data[5]; // Dial value at offset 5 (temporary assumption)
 
