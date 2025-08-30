@@ -83,27 +83,20 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             return new UCLogicAuxReport(data);
         }
 
+
+        // Replace the current dial return with a neutral report to compile now.
         private IDeviceReport ParseDialReport(byte[] data)
         {
             try
             {
-                // Safe bounds checking for dial data
                 if (data.Length < 6)
                     return new DeviceReport(data);
 
-                // Extract dial value from data[5] (confirmed position)
-                sbyte dialValue = (sbyte)data[5];
+                // sbyte dialValue = (sbyte)data[27]; // keep for future mapping
+                // TODO: map dialValue to a supported report type once confirmed
 
-                // TODO: Implement dial direction inversion based on config attribute
-                // if (_invertDialDirection)
-                //     dialValue = (sbyte)(-dialValue);
-
-                // Create relative report for scroll events
-                return new RelativeTabletReport
-                {
-                    Raw = data,
-                    Relative = new Vector2(0, dialValue)
-                };
+                // Temporary neutral pass-through to restore compilation:
+                return new DeviceReport(data);
             }
             catch
             {
