@@ -19,10 +19,10 @@
     {
       "VendorID": 9580,
       "ProductID": 100,
-      "InputReportLength": 10,
+      "InputReportLength": 16,
       "ReportParser": "OpenTabletDriver.Configurations.Parsers.Huion.KD200ReportParser",
       "Attributes": {
-        "Interface": "1.1"
+        "Interface": "1"
       }
     }
   ],
@@ -30,10 +30,10 @@
     {
       "VendorID": 9580,
       "ProductID": 100,
-      "InputReportLength": 10,
+      "InputReportLength": 64,
       "ReportParser": "OpenTabletDriver.Configurations.Parsers.Huion.KD200ReportParser",
       "Attributes": {
-        "Interface": "1.2"
+        "Interface": "2"
       }
     }
   ],
