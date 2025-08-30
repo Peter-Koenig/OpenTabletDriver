@@ -1,3 +1,6 @@
+
+xxxxx
+
 {
   "Name": "Huion Inspiroy Keydial KD200",
   "Specifications": {
@@ -19,7 +22,7 @@
     {
       "VendorID": 9580,
       "ProductID": 100,
-      "InputReportLength": 10,
+      "InputReportLength": 93,
       "ReportParser": "OpenTabletDriver.Configurations.Parsers.Huion.KD200ReportParser",
       "Attributes": {
         "Interface": "1"
@@ -30,7 +33,7 @@
     {
       "VendorID": 9580,
       "ProductID": 100,
-      "InputReportLength": 9,
+      "InputReportLength": 148,
       "ReportParser": "OpenTabletDriver.Configurations.Parsers.Huion.KD200ReportParser",
       "Attributes": {
         "Interface": "2"
