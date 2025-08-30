@@ -29,13 +29,19 @@ lsusb | grep -i "256c:0064"
 ### 1. Complete HID Descriptor Capture (MOST IMPORTANT)
 ```bash
 # Capture Interface 1 (Pen/Digitizer) - Report Length: 93
-sudo usbhid-dump -d 256c:0064 -i 1 -e descriptor,stream > kd200_if1_complete.txt
+sudo usbhid-dump -d 256c:0064 -i 1 -e all > kd200_if1_complete.txt
 
 # Capture Interface 2 (Dial/Keyboard) - Report Length: 148
-sudo usbhid-dump -d 256c:0064 -i 2 -e descriptor,stream > kd200_if2_complete.txt
+sudo usbhid-dump -d 256c:0064 -i 2 -e all > kd200_if2_complete.txt
 
 # Capture all interfaces for reference
 sudo usbhid-dump -d 256c:0064 -a > kd200_all_interfaces.txt
+
+# Alternative: Get descriptor and stream separately for each interface
+# sudo usbhid-dump -d 256c:0064 -i 1 -e descriptor > kd200_if1_descriptor.txt
+# sudo usbhid-dump -d 256c:0064 -i 1 -e stream >> kd200_if1_complete.txt
+# sudo usbhid-dump -d 256c:0064 -i 2 -e descriptor > kd200_if2_descriptor.txt  
+# sudo usbhid-dump -d 256c:0064 -i 2 -e stream >> kd200_if2_complete.txt
 ```
 
 ### 2. Structured Test Capture
@@ -44,7 +50,7 @@ Create separate capture files for each test scenario:
 #### Pen Movement Test
 ```bash
 # Move pen slowly across entire surface in grid pattern
-sudo usbhid-dump -d 256c:0064 -i 1 -e stream > kd200_pen_movement.txt &
+sudo usbhid-dump -d 256c:0064 -i 1 -e stream --stream-timeout 30 > kd200_pen_movement.txt &
 # Perform: Top-left → top-right → bottom-right → bottom-left → center
 # Then kill the process: kill %1
 ```
@@ -52,28 +58,28 @@ sudo usbhid-dump -d 256c:0064 -i 1 -e stream > kd200_pen_movement.txt &
 #### Pressure Test
 ```bash
 # Apply varying pressure on tip
-sudo usbhid-dump -d 256c:0064 -i 1 -e stream > kd200_pressure_test.txt &
+sudo usbhid-dump -d 256c:0064 -i 1 -e stream --stream-timeout 20 > kd200_pressure_test.txt &
 # Perform: Light pressure → medium → heavy → max → release
 ```
 
 #### Button Test
 ```bash
 # Test all pen buttons
-sudo usbhid-dump -d 256c:0064 -i 1 -e stream > kd200_buttons_test.txt &
+sudo usbhid-dump -d 256c:0064 -i 1 -e stream --stream-timeout 15 > kd200_buttons_test.txt &
 # Perform: Tip click → side button 1 → side button 2 → combinations
 ```
 
 #### Dial Test
 ```bash
 # Test dial rotation
-sudo usbhid-dump -d 256c:0064 -i 2 -e stream > kd200_dial_test.txt &
+sudo usbhid-dump -d 256c:0064 -i 2 -e stream --stream-timeout 15 > kd200_dial_test.txt &
 # Perform: Clockwise rotation → counterclockwise → various speeds
 ```
 
 #### Express Keys Test
 ```bash
 # Test all keyboard keys
-sudo usbhid-dump -d 256c:0064 -i 2 -e stream > kd200_keys_test.txt &
+sudo usbhid-dump -d 256c:0064 -i 2 -e stream --stream-timeout 20 > kd200_keys_test.txt &
 # Press each express key multiple times in sequence
 ```
 

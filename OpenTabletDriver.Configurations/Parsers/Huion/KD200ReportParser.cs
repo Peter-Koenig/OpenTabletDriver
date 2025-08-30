@@ -1,5 +1,6 @@
 using OpenTabletDriver.Configurations.Parsers.UCLogic;
 using OpenTabletDriver.Tablet;
+using System;
 using System.Numerics;
 
 namespace OpenTabletDriver.Configurations.Parsers.Huion
@@ -12,7 +13,7 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
         public IDeviceReport Parse(byte[] data)
         {
             if (data == null || data.Length == 0)
-                return new DeviceReport(data);
+                return new DeviceReport(Array.Empty<byte>());
 
             // Safe bounds check before accessing data[0]
             if (data.Length < 1)
@@ -58,9 +59,9 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             return new TabletReport
             {
                 Raw = data,
-                Position = new Vector2(0, 0), // BLOCKED - Will be updated after HID analysis
-                Pressure = 0,                 // BLOCKED - Will be updated after HID analysis
-                PenButtons = new bool[2]      // BLOCKED - Neutral button state
+                Position = new Vector2(0, 0), // TODO: Replace with actual X/Y offsets from HID analysis
+                Pressure = 0,                 // TODO: Replace with actual pressure offset from HID analysis
+                PenButtons = new bool[2]      // TODO: Replace with actual button bit positions from HID dump
                 {
                     false, // Tip button - TODO: determine actual bit position from HID dump
                     false  // Side button - TODO: determine actual bit position from HID dump
@@ -73,18 +74,27 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
             // Neutral handling for auxiliary reports (Interface 2)
             // This includes both dial and keyboard events
 
-            // For now, check for potential dial data with safe bounds
-            if (data.Length > 5 && data[0] == 0xf1)
+            // Safe bounds check before accessing data[0]
+            if (data.Length > 0)
             {
-                return ParseDialReport(data);
+                // Handle dial reports specifically
+                if (data[0] == 0xf1 && data.Length > 5)
+                {
+                    return ParseDialReport(data);
+                }
+
+                // Handle other auxiliary report types (buttons, etc.)
+                if (data[0] == 0xe0 || data[0] == 0xe3)
+                {
+                    return new UCLogicAuxReport(data);
+                }
             }
 
-            // Default to auxiliary button report for other cases
-            return new UCLogicAuxReport(data);
+            // Default to generic device report for unknown formats
+            return new DeviceReport(data);
         }
 
 
-        // Replace the current dial return with a neutral report to compile now.
         private IDeviceReport ParseDialReport(byte[] data)
         {
             try
@@ -92,14 +102,24 @@ namespace OpenTabletDriver.Configurations.Parsers.Huion
                 if (data.Length < 6)
                     return new DeviceReport(data);
 
-                // sbyte dialValue = (sbyte)data[27]; // keep for future mapping
-                // TODO: map dialValue to a supported report type once confirmed
+                // Safe bounds check before accessing data[5] for dial value
+                if (data.Length > 5)
+                {
+                    sbyte dialValue = (sbyte)data[5]; // Dial value at offset 5 (temporary assumption)
 
-                // Temporary neutral pass-through to restore compilation:
+                    // TODO: Verify actual dial byte offset from HID analysis
+                    // TODO: Implement DialInvertDirection attribute support
+                    // TODO: Generate proper scroll events once HID analysis is complete
+
+                    // For now, return basic device report - scroll handling will be implemented
+                    // after HID analysis confirms the exact dial byte offset and behavior
+                }
+
                 return new DeviceReport(data);
             }
             catch
             {
+                // Fallback to neutral report on any parsing error
                 return new DeviceReport(data);
             }
         }
